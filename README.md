@@ -1,7 +1,7 @@
-##Apache tika impl
+## Apache Tika impl
 
 ### Setup
-* Need to install 
+* Need to include to project:
     * http://www.cs.put.poznan.pl/alabijak/ezi/lab2/tika-app-1.17.jar
     * http://www.cs.put.poznan.pl/alabijak/ezi/lab2/pdfbox-2.0.8.jar
     
