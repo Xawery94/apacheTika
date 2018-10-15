@@ -2,12 +2,16 @@ package main;
 
 import org.apache.tika.exception.TikaException;
 import org.apache.tika.langdetect.OptimaizeLangDetector;
+import org.apache.tika.language.LanguageIdentifier;
+import org.apache.tika.metadata.Metadata;
+import org.apache.tika.metadata.Property;
+import org.apache.tika.parser.AutoDetectParser;
+import org.apache.tika.parser.ParseContext;
+import org.apache.tika.parser.Parser;
+import org.apache.tika.sax.BodyContentHandler;
 import org.xml.sax.SAXException;
 
-import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.IOException;
-import java.io.PrintWriter;
+import java.io.*;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.text.SimpleDateFormat;
@@ -42,15 +46,47 @@ public class Exercise2 {
 
     }
 
+    //AutoDetectParser, BodyContentHandler,
+    //Metadata, OptimaizeLangDetector, LanguageResult, TikeCoreProperties
+
     private void initLangDetector() throws IOException {
+
+
         // TODO initialize language detector (langDetector)
+
+
     }
 
     private void processFile(File file) throws IOException, SAXException, TikaException {
         // TODO: extract content, metadata and language from given file
         // call saveResult method to save the data
+        Parser parser = new AutoDetectParser();
+        BodyContentHandler handler = new BodyContentHandler(-1);
+        Metadata metadata = new Metadata();
+        FileInputStream content = new FileInputStream(file);
+        parser.parse(content, handler, metadata, new ParseContext());
+        LanguageIdentifier object = new LanguageIdentifier(handler.toString());
 
-        saveResult(file.getName(), null, null, null, null, null, null); //TODO: fill with proper values
+        String creator = "";
+        Date date = new Date();
+        Date lastModif = new Date();
+        try {
+            creator = metadata.getValues("creator")[0];
+            date = metadata.getDate(Property.get("date"));
+            lastModif = metadata.getDate(Property.get("Last-Modified"));
+        } catch (ArrayIndexOutOfBoundsException exc) {
+            System.err.println(exc.getMessage());
+        }
+
+        //TODO: fill with proper values
+        saveResult(
+                file.getName(),
+                object.getLanguage(),
+                creator,
+                date,
+                lastModif,
+                null,
+                null);
     }
 
     private void saveResult(String fileName, String language, String creatorName, Date creationDate,

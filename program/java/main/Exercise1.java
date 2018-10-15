@@ -1,12 +1,29 @@
 package main;
 
+import org.apache.pdfbox.pdmodel.PDDocument;
+import org.apache.pdfbox.text.PDFTextStripper;
 import org.apache.tika.exception.TikaException;
+import org.apache.tika.metadata.Metadata;
+import org.apache.tika.parser.AutoDetectParser;
+import org.apache.tika.sax.BodyContentHandler;
+import org.apache.tika.sax.PhoneExtractingContentHandler;
+import org.w3c.dom.Document;
+import org.w3c.dom.Element;
+import org.w3c.dom.NodeList;
 import org.xml.sax.SAXException;
 
+import javax.xml.parsers.DocumentBuilder;
+import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
 import java.io.IOException;
+import java.io.InputStream;
 import java.util.Arrays;
+import java.util.Enumeration;
 import java.util.LinkedList;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipFile;
 
 public class Exercise1 {
     public static void main(String[] args) throws IOException, ParserConfigurationException,
@@ -18,11 +35,12 @@ public class Exercise1 {
     private void run() throws ParserConfigurationException, SAXException, IOException, TikaException {
         LinkedList<String> phonesByTwoParses = exercise1a();
         System.out.println("Results of the two parses:");
-        printResults(phonesByTwoParses);
+        //todo some phone number were not found because there was wrong tag name <Surname>
+//        printResults(phonesByTwoParses);
 
         LinkedList<String> phonesByTika = exercise1b();
         System.out.println("Results of Tika:");
-        //printResults(phonesByTika);
+        printResults(phonesByTika);
     }
 
 
@@ -30,7 +48,49 @@ public class Exercise1 {
         System.out.println("Running exercise 1a...");
         LinkedList<String> results = new LinkedList<>();
 
-        // TODO
+        ZipFile file = new ZipFile("Exercise1.zip");
+        Enumeration entries = file.entries();
+        while (entries.hasMoreElements()) {
+            ZipEntry entry = (ZipEntry) entries.nextElement();
+            InputStream stream = file.getInputStream(entry);
+
+            switch (entry.getName().split("\\.")[1]) {
+                case "pdf":
+                    System.out.println("1.pdf");
+                    final PDDocument pd = PDDocument.load(stream);
+                    final PDFTextStripper pts = new PDFTextStripper();
+
+                    final String textStripper = pts.getText(pd);
+
+                    Pattern pattern = Pattern.compile("\\([0-9]{3}\\) ?[0-9-]+");
+                    Matcher matcher = pattern.matcher(textStripper);
+                    while (matcher.find()) {
+                        String text = matcher.group();
+                        results.add(text);
+                    }
+
+                    stream.close();
+
+                    break;
+                case "xml":
+                    System.out.println("2.xml");
+
+                    DocumentBuilderFactory dbf = DocumentBuilderFactory.newInstance();
+                    DocumentBuilder db = dbf.newDocumentBuilder();
+                    Document dom = db.parse(stream);
+
+                    NodeList nodeList = dom.getElementsByTagName("Phone");
+                    for (int i = 0; i < nodeList.getLength(); i++) {
+                        Element element = (Element) nodeList.item(i);
+                        results.add(element.getTextContent());
+                    }
+
+                    stream.close();
+
+                    break;
+            }
+
+        }
 
         return results;
     }
@@ -38,11 +98,26 @@ public class Exercise1 {
     private LinkedList<String> exercise1b() throws IOException, TikaException, SAXException {
         System.out.println("Running exercise 1b...");
         LinkedList<String> results = new LinkedList<>();
-        // TODO
+        final AutoDetectParser parser = new AutoDetectParser();
+        final Metadata meta = new Metadata();
+        final PhoneExtractingContentHandler handler = new PhoneExtractingContentHandler(new BodyContentHandler(), meta);
+
+        final ZipFile file = new ZipFile("Exercise1.zip");
+        final Enumeration entries = file.entries();
+
+        while (entries.hasMoreElements()) {
+            ZipEntry entry = (ZipEntry) entries.nextElement();
+            InputStream stream = file.getInputStream(entry);
+            parser.parse(stream, handler, meta);
+
+            String[] numbers1 = meta.getValues("phonenumbers");
+            results.addAll(Arrays.asList(numbers1));
+            stream.close();
+
+        }
 
         return new LinkedList<>(results);
     }
-
 
     private void printResults(LinkedList<String> results) {
         LinkedList<String> parsedResults = new LinkedList<>();
