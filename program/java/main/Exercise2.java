@@ -1,10 +1,14 @@
 package main;
 
+import org.apache.tika.config.TikaConfig;
+import org.apache.tika.detect.Detector;
 import org.apache.tika.exception.TikaException;
+import org.apache.tika.io.TikaInputStream;
 import org.apache.tika.langdetect.OptimaizeLangDetector;
 import org.apache.tika.language.LanguageIdentifier;
 import org.apache.tika.metadata.Metadata;
 import org.apache.tika.metadata.Property;
+import org.apache.tika.mime.MediaType;
 import org.apache.tika.parser.AutoDetectParser;
 import org.apache.tika.parser.ParseContext;
 import org.apache.tika.parser.Parser;
@@ -43,29 +47,28 @@ public class Exercise2 {
         } catch (IOException | SAXException | TikaException e) {
             e.printStackTrace();
         }
-
     }
 
     //AutoDetectParser, BodyContentHandler,
     //Metadata, OptimaizeLangDetector, LanguageResult, TikeCoreProperties
-
     private void initLangDetector() throws IOException {
-
-
         // TODO initialize language detector (langDetector)
-
-
     }
 
     private void processFile(File file) throws IOException, SAXException, TikaException {
         // TODO: extract content, metadata and language from given file
         // call saveResult method to save the data
+        TikaConfig tikaConfig = TikaConfig.getDefaultConfig();
         Parser parser = new AutoDetectParser();
         BodyContentHandler handler = new BodyContentHandler(-1);
         Metadata metadata = new Metadata();
+        Detector detector = tikaConfig.getDetector();
+
         FileInputStream content = new FileInputStream(file);
         parser.parse(content, handler, metadata, new ParseContext());
         LanguageIdentifier object = new LanguageIdentifier(handler.toString());
+        InputStream stream = TikaInputStream.get(file);
+        MediaType type = detector.detect(stream, metadata);
 
         String creator = "";
         Date date = new Date();
@@ -75,7 +78,7 @@ public class Exercise2 {
             date = metadata.getDate(Property.get("date"));
             lastModif = metadata.getDate(Property.get("Last-Modified"));
         } catch (ArrayIndexOutOfBoundsException exc) {
-            System.err.println(exc.getMessage());
+            System.err.println("Error:" + exc);
         }
 
         //TODO: fill with proper values
@@ -85,8 +88,8 @@ public class Exercise2 {
                 creator,
                 date,
                 lastModif,
-                null,
-                null);
+                type.getSubtype(),
+                handler.toString());
     }
 
     private void saveResult(String fileName, String language, String creatorName, Date creationDate,
