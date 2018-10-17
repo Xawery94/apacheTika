@@ -6,6 +6,8 @@ import org.apache.tika.exception.TikaException;
 import org.apache.tika.io.TikaInputStream;
 import org.apache.tika.langdetect.OptimaizeLangDetector;
 import org.apache.tika.language.LanguageIdentifier;
+import org.apache.tika.language.detect.LanguageDetector;
+import org.apache.tika.language.detect.LanguageResult;
 import org.apache.tika.metadata.Metadata;
 import org.apache.tika.metadata.Property;
 import org.apache.tika.mime.MediaType;
@@ -49,42 +51,37 @@ public class Exercise2 {
         }
     }
 
-    //AutoDetectParser, BodyContentHandler,
-    //Metadata, OptimaizeLangDetector, LanguageResult, TikeCoreProperties
     private void initLangDetector() throws IOException {
-        // TODO initialize language detector (langDetector)
+        langDetector = new OptimaizeLangDetector();
+        langDetector.loadModels();
     }
 
     private void processFile(File file) throws IOException, SAXException, TikaException {
-        // TODO: extract content, metadata and language from given file
-        // call saveResult method to save the data
         TikaConfig tikaConfig = TikaConfig.getDefaultConfig();
         Parser parser = new AutoDetectParser();
         BodyContentHandler handler = new BodyContentHandler(-1);
         Metadata metadata = new Metadata();
         Detector detector = tikaConfig.getDetector();
-
         FileInputStream content = new FileInputStream(file);
         parser.parse(content, handler, metadata, new ParseContext());
-        LanguageIdentifier object = new LanguageIdentifier(handler.toString());
         InputStream stream = TikaInputStream.get(file);
         MediaType type = detector.detect(stream, metadata);
+        LanguageResult langResult = langDetector.detect(handler.toString());
 
         String creator = "";
-        Date date = new Date();
-        Date lastModif = new Date();
+        Date date = null;
+        Date lastModif = null;
         try {
             creator = metadata.getValues("creator")[0];
             date = metadata.getDate(Property.get("date"));
             lastModif = metadata.getDate(Property.get("Last-Modified"));
         } catch (ArrayIndexOutOfBoundsException exc) {
-            System.err.println("Error:" + exc);
+            System.err.println("Error: no metadata provided");
         }
 
-        //TODO: fill with proper values
         saveResult(
                 file.getName(),
-                object.getLanguage(),
+                langResult.getLanguage(),
                 creator,
                 date,
                 lastModif,
