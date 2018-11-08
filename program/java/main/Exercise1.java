@@ -36,13 +36,12 @@ public class Exercise1 {
         LinkedList<String> phonesByTwoParses = exercise1a();
         System.out.println("Results of the two parses:");
         //todo some phone number were not found because there was wrong tag name <Surname>
-//        printResults(phonesByTwoParses);
+        printResults(phonesByTwoParses);
 
         LinkedList<String> phonesByTika = exercise1b();
         System.out.println("Results of Tika:");
         printResults(phonesByTika);
     }
-
 
     private LinkedList<String> exercise1a() throws IOException, ParserConfigurationException, SAXException {
         System.out.println("Running exercise 1a...");
@@ -56,7 +55,6 @@ public class Exercise1 {
 
             switch (entry.getName().split("\\.")[1]) {
                 case "pdf":
-                    System.out.println("1.pdf");
                     final PDDocument pd = PDDocument.load(stream);
                     final PDFTextStripper pts = new PDFTextStripper();
 
@@ -70,11 +68,8 @@ public class Exercise1 {
                     }
 
                     stream.close();
-
                     break;
                 case "xml":
-                    System.out.println("2.xml");
-
                     DocumentBuilderFactory dbf = DocumentBuilderFactory.newInstance();
                     DocumentBuilder db = dbf.newDocumentBuilder();
                     Document dom = db.parse(stream);
@@ -86,10 +81,8 @@ public class Exercise1 {
                     }
 
                     stream.close();
-
                     break;
             }
-
         }
 
         return results;
@@ -113,7 +106,6 @@ public class Exercise1 {
             String[] numbers1 = meta.getValues("phonenumbers");
             results.addAll(Arrays.asList(numbers1));
             stream.close();
-
         }
 
         return new LinkedList<>(results);
@@ -150,7 +142,6 @@ public class Exercise1 {
         System.out.println("- missed phone numbers = " + missed.size());
         for (String s : missed)
             System.out.println("    " + s);
-
     }
 
     private String _data[] =
