@@ -40,6 +40,7 @@ public class Exercise1 {
 
         LinkedList<String> phonesByTika = exercise1b();
         System.out.println("Results of Tika:");
+        //todo YES, Tika extracted more phone numbers than build-in class
         printResults(phonesByTika);
     }
 
