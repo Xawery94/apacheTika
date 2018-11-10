@@ -8,7 +8,6 @@ import org.apache.tika.parser.AutoDetectParser;
 import org.apache.tika.sax.BodyContentHandler;
 import org.apache.tika.sax.PhoneExtractingContentHandler;
 import org.w3c.dom.Document;
-import org.w3c.dom.Element;
 import org.w3c.dom.NodeList;
 import org.xml.sax.SAXException;
 
@@ -53,36 +52,33 @@ public class Exercise1 {
         while (entries.hasMoreElements()) {
             ZipEntry entry = (ZipEntry) entries.nextElement();
             InputStream stream = file.getInputStream(entry);
+            final String fileExtension = entry.getName();
 
-            switch (entry.getName().split("\\.")[1]) {
-                case "pdf":
-                    final PDDocument pd = PDDocument.load(stream);
-                    final PDFTextStripper pts = new PDFTextStripper();
+            if (fileExtension.contains("pdf")) {
+                final PDDocument pd = PDDocument.load(stream);
+                final PDFTextStripper pts = new PDFTextStripper();
 
-                    final String textStripper = pts.getText(pd);
+                final String textStripper = pts.getText(pd);
 
-                    Pattern pattern = Pattern.compile("\\([0-9]{3}\\) ?[0-9-]+");
-                    Matcher matcher = pattern.matcher(textStripper);
-                    while (matcher.find()) {
-                        String text = matcher.group();
-                        results.add(text);
-                    }
+                Pattern pattern = Pattern.compile("\\([0-9]{3}\\) ?[0-9-]+");
+                Matcher matcher = pattern.matcher(textStripper);
+                while (matcher.find()) {
+                    String text = matcher.group();
+                    results.add(text);
+                }
 
-                    stream.close();
-                    break;
-                case "xml":
-                    DocumentBuilderFactory dbf = DocumentBuilderFactory.newInstance();
-                    DocumentBuilder db = dbf.newDocumentBuilder();
-                    Document dom = db.parse(stream);
+                stream.close();
+            } else if (fileExtension.contains("xml")) {
+                DocumentBuilderFactory dbf = DocumentBuilderFactory.newInstance();
+                DocumentBuilder db = dbf.newDocumentBuilder();
+                Document dom = db.parse(stream);
 
-                    NodeList nodeList = dom.getElementsByTagName("Phone");
-                    for (int i = 0; i < nodeList.getLength(); i++) {
-                        Element element = (Element) nodeList.item(i);
-                        results.add(element.getTextContent());
-                    }
+                NodeList nodeList = dom.getElementsByTagName("Phone");
+                for (int i = 0; i < nodeList.getLength(); i++) {
+                    results.add(nodeList.item(i).getTextContent());
+                }
 
-                    stream.close();
-                    break;
+                stream.close();
             }
         }
 
